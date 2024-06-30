@@ -52,10 +52,16 @@ def reboot_modem():
     Otherwise, prints a message indicating failure to send the reboot command.
     """
     reboot_url = f"http://{MODEM_IP}/cgi-bin/restart.ha"
-    # reboot_url = f"http://{MODEM_IP}/cgi-bin/securityoptions.ha"
     response = s.get(reboot_url)
-    
-    if response.status_code == 200:
+    nonce = response.text.split('name="nonce" value="')[1].split('"')[0]
+    reboot_data = {
+        "nonce": nonce,
+        "Restart": "Restart"
+    }
+    print("Rebooting the modem...")
+    s.post(reboot_url, data=reboot_data)
+
+    if response.status_code == 302:
         print("Reboot command sent to the modem.")
     else:
         print("Failed to send reboot command.")
