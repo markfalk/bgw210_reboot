@@ -14,8 +14,10 @@ if not PASSWORD:
 # Function to fetch nonce from login page
 def get_nonce():
     url = f"http://{MODEM_IP}/cgi-bin/login.ha"
+    print("Fetching initial cookie...")
     response = s.get(url)
     # call again now that we have a session cookie
+    print("Fetching nonce...")
     response = s.get(url)
     nonce = response.text.split('name="nonce" value="')[1].split('"')[0]
     return nonce
@@ -48,18 +50,24 @@ def reboot_modem():
     login()
     """
     Reboots the modem by sending a request to the reboot URL.
-    If the response status code is 200, it indicates success in sending the reboot command.
+    If the response status code is 302, it indicates success in sending the reboot command.
     Otherwise, prints a message indicating failure to send the reboot command.
     """
     reboot_url = f"http://{MODEM_IP}/cgi-bin/restart.ha"
     response = s.get(reboot_url)
+    if response.status_code == 200:
+        print("Restart page loaded...")
+    else:
+        print("Failed to load restart page.")
+        raise SystemExit(1)
+
     nonce = response.text.split('name="nonce" value="')[1].split('"')[0]
     reboot_data = {
         "nonce": nonce,
         "Restart": "Restart"
     }
     print("Rebooting the modem...")
-    s.post(reboot_url, data=reboot_data)
+    # s.post(reboot_url, data=reboot_data)
 
     if response.status_code == 302:
         print("Reboot command sent to the modem.")
