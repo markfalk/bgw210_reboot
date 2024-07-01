@@ -70,7 +70,7 @@ def reboot_modem():
         "Restart": "Restart"
     }
     print("Rebooting the modem...")
-    # s.post(reboot_url, data=reboot_data)
+    s.post(reboot_url, data=reboot_data)
         
     slack_webhook_url = environ.get('SLACK_WEBHOOK_URL')
 
