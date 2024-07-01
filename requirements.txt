@@ -1,1 +1,2 @@
 requests
+slack-sdk==3.8.0

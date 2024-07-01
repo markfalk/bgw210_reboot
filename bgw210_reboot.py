@@ -1,6 +1,9 @@
 import os
 import requests
 from hashlib import md5
+from os import environ
+from slack_sdk.webhook import WebhookClient
+
 
 # Get variables from environment
 MODEM_IP = os.getenv("MODEM_IP", "192.168.1.254")
@@ -68,11 +71,22 @@ def reboot_modem():
     }
     print("Rebooting the modem...")
     # s.post(reboot_url, data=reboot_data)
+        
+    slack_webhook_url = environ.get('SLACK_WEBHOOK_URL')
 
     if response.status_code == 302:
         print("Reboot command sent to the modem.")
     else:
         print("Failed to send reboot command.")
+
+    if slack_webhook_url is not None:
+        webhook = WebhookClient(slack_webhook_url)
+        response = webhook.send_dict({"username": "AT&T Modem",
+                                      "text": f"response status_code: {response.status_code}",
+                                      "icon_emoji": ":bgw210:",
+                                      })
+        assert response.status_code == 200
+        assert response.body == "ok"
 
 # Call the reboot function
 if __name__ == "__main__":
