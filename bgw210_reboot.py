@@ -50,6 +50,37 @@ def login():
     if DEBUG:
         print(response.content)
 
+def send_slack_message(slack_webhook_url, message_data):
+    """Sends a Slack message with retries on failure.
+
+    Args:
+        slack_webhook_url: The Slack webhook URL.
+        message_data: The message data to send.
+
+    Returns:
+        True if the message was sent successfully, False otherwise.
+    """
+
+    max_retries = 5
+    retry_delay = 60  # seconds
+
+    for attempt in range(max_retries):
+        try:
+            webhook = WebhookClient(slack_webhook_url)
+            response = webhook.send(message_data)
+            if DEBUG:
+                print(response.content)
+            assert response.status_code == 200
+            assert response.body == "ok"
+            return True  # Success
+        except Exception as e:
+            print(f"Error sending Slack message: {e}")
+            if attempt < max_retries - 1:
+                print(f"Retrying in {retry_delay} seconds...")
+                sleep(retry_delay)
+            else:
+                print("Maximum retries reached.")
+    return False  # Failed after all retries
 
 # Function to reboot the modem
 def reboot_modem():
@@ -80,24 +111,16 @@ def reboot_modem():
     response = s.post(reboot_url, data=reboot_data)
     if DEBUG:
         print(response.content)
-
-    if response.status_code == 302:
-        print("Reboot command sent to the modem.")
-    else:
-        print("Failed to send reboot command.")
+    print(f"Reboot command sent to the modem.  Response Code: {response.status_code}")
 
     slack_webhook_url = environ.get('SLACK_WEBHOOK_URL')
-    if slack_webhook_url is not None:
-        sleep(120)
-        webhook = WebhookClient(slack_webhook_url)
-        response = webhook.send_dict({"username": "AT&T Modem",
-                                      "text": f"response status_code: {response.status_code}",
-                                      "icon_emoji": ":bgw210:",
-                                      })
-        if DEBUG:
-            print(response.content)
-        assert response.status_code == 200
-        assert response.body == "ok"
+    if slack_webhook_url:
+        message_data = {
+            "username": "AT&T Modem",
+            "text": f"response status_code: {response.status_code}",
+            "icon_emoji": ":bgw210:",
+        }
+        send_slack_message(slack_webhook_url, message_data)
 
 # Call the reboot function
 if __name__ == "__main__":
