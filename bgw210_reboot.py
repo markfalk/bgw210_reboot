@@ -5,9 +5,6 @@ from hashlib import md5
 from os import environ
 from slack_sdk.webhook import WebhookClient
 
-print("os.environ:")
-print(os.environ)
-
 # Get variables from environment
 MODEM_IP = os.getenv("MODEM_IP", "192.168.1.254")
 PASSWORD = os.getenv("PASSWORD")
