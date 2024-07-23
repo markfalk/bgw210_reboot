@@ -67,9 +67,9 @@ def send_slack_message(slack_webhook_url, message_data):
     for attempt in range(max_retries):
         try:
             webhook = WebhookClient(slack_webhook_url)
-            response = webhook.send(message_data)
+            response = webhook.send_dict(message_data)
             if DEBUG:
-                print(response.content)
+                print(response.body)
             assert response.status_code == 200
             assert response.body == "ok"
             return True  # Success
