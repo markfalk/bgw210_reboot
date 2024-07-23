@@ -14,3 +14,10 @@ Script to invoke it looks like:
 #!/bin/bash
 docker run --rm -e PASSWORD=='<MODEM_PASSWORD>' -e SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXXX/XXXXX mfalk/bgw210_reboot
 ```
+
+Supported environment variables:
+| Variable | Purpose |
+| --- | --- |
+| PASSWORD | Password for the modem admin |
+| SLACK_WEBHOOK_URL | Webhook URL to post to Slack the status of the reboot |
+| DEBUG | Set to any value to print out response bodies |

@@ -1,13 +1,17 @@
 import os
+from time import sleep
 import requests
 from hashlib import md5
 from os import environ
 from slack_sdk.webhook import WebhookClient
 
+print("os.environ:")
+print(os.environ)
 
 # Get variables from environment
 MODEM_IP = os.getenv("MODEM_IP", "192.168.1.254")
 PASSWORD = os.getenv("PASSWORD")
+DEBUG = True if os.getenv("DEBUG") else False
 
 s = requests.Session()
 
@@ -45,7 +49,9 @@ def login():
     
     login_url = f"http://{MODEM_IP}/cgi-bin/login.ha"
     print("Logging in...")
-    s.post(login_url, data=login_data)
+    response = s.post(login_url, data=login_data)
+    if DEBUG:
+        print(response.content)
 
 
 # Function to reboot the modem
@@ -57,7 +63,11 @@ def reboot_modem():
     Otherwise, prints a message indicating failure to send the reboot command.
     """
     reboot_url = f"http://{MODEM_IP}/cgi-bin/restart.ha"
+    print("Loading retart page...")
     response = s.get(reboot_url)
+    if DEBUG:
+        print(response.content)
+
     if response.status_code == 200:
         print("Restart page loaded...")
     else:
@@ -70,21 +80,25 @@ def reboot_modem():
         "Restart": "Restart"
     }
     print("Rebooting the modem...")
-    s.post(reboot_url, data=reboot_data)
-        
-    slack_webhook_url = environ.get('SLACK_WEBHOOK_URL')
+    response = s.post(reboot_url, data=reboot_data)
+    if DEBUG:
+        print(response.content)
 
     if response.status_code == 302:
         print("Reboot command sent to the modem.")
     else:
         print("Failed to send reboot command.")
 
+    slack_webhook_url = environ.get('SLACK_WEBHOOK_URL')
     if slack_webhook_url is not None:
+        sleep(120)
         webhook = WebhookClient(slack_webhook_url)
         response = webhook.send_dict({"username": "AT&T Modem",
                                       "text": f"response status_code: {response.status_code}",
                                       "icon_emoji": ":bgw210:",
                                       })
+        if DEBUG:
+            print(response.content)
         assert response.status_code == 200
         assert response.body == "ok"
 
